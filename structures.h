@@ -5,21 +5,22 @@ typedef unsigned char BYTE;
 typedef enum dataFormat {BIG, LITTLE} ORDERING;
 
 typedef struct HEADER{
-	char  chunkID[WORD];
-	int   chunkSize;
-	char  format[WORD];
+	BYTE  chunkID[WORD];
+	unsigned int   chunkSize;
+	BYTE  format[WORD];
 
-	char  subChunk1ID[WORD];
-	int   subChunk1Size;
-	short   audioFormat;
-	short   numChannels;
-	int   sampleRate;
-	int   byteRate;
-	short   blockAlign;
-	short   bitsPerSample;
+	BYTE  subChunk1ID[WORD];
+	unsigned int      subChunk1Size;
+	unsigned short    audioFormat;
+	unsigned short    numChannels;
+	unsigned int      sampleRate;
+	unsigned int      byteRate;
+	unsigned short    blockAlign;
+	unsigned short    bitsPerSample;
+	unsigned short    extraVal;
 
-	char  subChunk2ID[WORD];
-	int   subChunk2Size;
+	BYTE  subChunk2ID[WORD];
+	unsigned int   subChunk2Size;
 
 } HEAD;
 
