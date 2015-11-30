@@ -30,7 +30,7 @@ void destroyFile(HEAD *file){
 		free(file);
 	}
 }
-int printHead(HEAD *h){
+void printHead(HEAD *h){
       printf("Chunk ID:         %.4s\n", h->chunkID);
       printf("Chunk Size:       %u\n", h->chunkSize);
       printf("Format:           %.4s\n", h->format);

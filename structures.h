@@ -26,7 +26,7 @@ typedef struct HEADER{
 	U_BYTE	*data;
 } HEAD;
 
-void getFile(char *filename);
+HEAD * getFile(char *filename);
 void destroyFile(HEAD *file);
-void printFile(HEAD *file);
+void printHead(HEAD *file);
 #endif
