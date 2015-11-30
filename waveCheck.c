@@ -89,14 +89,14 @@ HEAD * getFile(char *arg){
 	file->subChunk2Size = makeInt(temp, WORD);
   
 	// Point to data.
-	file->data = malloc(file->subChunkSize);
+	file->data = malloc(file->subChunk2Size);
 	if (file->data == NULL){
 		free(file);
 		return NULL;
 	}
 	
 	// %%%%%%$$$$ -> [$$$$]
-	memcpy(file->data, buff[46], file->subChunkSize);
+	memcpy(file->data, &buff[46], file->subChunk2Size);
 	
 	return file;
 }

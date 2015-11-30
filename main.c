@@ -21,9 +21,9 @@ static int printHead(HEAD *h){
 
 int main(int argCount, char *arg[]){
 	HEAD *file = getFile(arg[1]);
-	if (h == NULL)
+	if (file == NULL)
             exit(0);
-	printHead(h);
+	printHead(file);
 	destroyFile(file);
 	
 }

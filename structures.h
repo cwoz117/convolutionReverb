@@ -26,6 +26,6 @@ typedef struct HEADER{
 	BYTE	*data;
 } HEAD;
 
-void getFile(char*, HEAD*, BYTE*);
+void getFile(char *filename);
 
 #endif
