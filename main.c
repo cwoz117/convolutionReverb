@@ -20,16 +20,10 @@ static int printHead(HEAD *h){
 }
 
 int main(int argCount, char *arg[]){
-	HEAD *h = malloc(sizeof(HEAD));
+	HEAD *file = getFile(arg[1]);
 	if (h == NULL)
             exit(0);
-      
-	BYTE *data;
-	getFile(arg[1], h, data);
 	printHead(h);
+	destroyFile(file);
 	
-	if (h != NULL)
-	      free(h);
-	//if (data != NULL)
-	//     free(data);
 }
