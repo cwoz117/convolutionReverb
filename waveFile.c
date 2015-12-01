@@ -4,115 +4,177 @@
 #include <string.h>
 #include "structures.h"
 
-static unsigned int makeInt(U_BYTE *bufferArray, int size){
-	unsigned int created = 0;
-	unsigned int temp = 0;
-	for (int i = 0; i < size; i++){
-	      unsigned int j = (unsigned int) bufferArray[i];
-		temp = j << (i * 8);
+U_INT makeInt(U_BYTE *bufferArray, int size){
+	U_INT created = 0;
+	U_INT temp = 0;
+	for (U_INT i = 0; i < size; i++){
+	      U_INT j = bufferArray[i];
+		temp = j << (i * BYTE);
 		created = created | temp;
 	}
 	return created;
 }
 
-//VOLATILE
-static void pullValue(U_BYTE *source, U_BYTE *dest, int startIndex, int range){
-	for (int i = 0; i < range; i ++){
-		dest[i] = source[startIndex];
-		startIndex++;
+void writeToFile(HEAD *mem, char *arg, int dataSize){
+	FILE *fp = fopen(arg, "wb");
+	if (fp != NULL){
+		fwrite(mem->head, sizeof(U_BYTE), HEADER_SIZE, fp);
+		if (mem->data != NULL)
+			fwrite(&mem->data[0], sizeof(U_BYTE), dataSize, fp);
 	}
+	fclose(fp);
 }
 
-void destroyFile(HEAD *file){
-	if (file != NULL){
-		if (file->data != NULL)
-			free(file->data);
-		free(file);
-	}
+void destroy(HEAD *file){
+  free(file->head);
+  free(file->data);
+  free(file);
 }
-void printHead(HEAD *h){
-      printf("Chunk ID:         %.4s\n", h->chunkID);
-      printf("Chunk Size:       %u\n", h->chunkSize);
-      printf("Format:           %.4s\n", h->format);
-      printf("Sub-Chunk 1 ID:   %.4s\n", h->subChunk1ID);
-      printf("Sub-Chunk 1 Size: %u\n", h->subChunk1Size);
-      printf("Audio format:     %hu\n", h->audioFormat);
-      printf("# of Channels:    %hu\n", h->numChannels);
-      printf("Sample Rate:      %u\n", h->sampleRate);
-      printf("Byte Rate:        %u\n", h->byteRate);
-      printf("Block Align:      %hu\n", h->blockAlign);
-      printf("Bit/Sample:       %hu\n", h->bitsPerSample);
-      printf("ExtraVal:         %hu\n", h->extraVal);
-      printf("Sub-Chunk 2 ID:   %.4s\n", h->subChunk2ID);
-      printf("Sub-Chunk 2 Size: %u\n", h->subChunk2Size);
+
+
+/*
+	char *str[4];
+	str[0] = "RIFF";
+	str[1] = "WAVE";
+	str[2] = "fmt ";
+	str[3] = "data";
+	U_BYTE *headAry = malloc(HEADER_SIZE);
+	if (headAry == NULL){
+	  printf("could not allocate space\n");
+	  return NULL;
+	}
+	U_INT i, j = 0;
+	while (i < HEADER_SIZE){
+		switch(i) {
+			case CHUNK_ID      : case FORMAT: 
+			case SUB_CHUNK_1_ID: case SUB_CHUNK_2_ID:
+      			memcpy(&headAry[i], &file->head[i], WORD);
+      			i += WORD;
+      			break;
+      		case AUDIO_FORMAT   : case CHANNEL_COUNT : case BLOCK_ALIGN: 
+      		case BITS_PER_SAMPLE: case EXTRANEOUS_VAL:
+      			memcpy(&headAry[i], &file->head[i], HALFWORD);
+				i += HALFWORD;
+				break; 
+			case SUB_CHUNK_2_SIZE: case CHUNK_SIZE:
+				j = size;
+				if (i == CHUNK_SIZE){
+					j += 38;
+				}
+				headAry[i+0] = (char)(0xFF & j);
+				headAry[i+1] = (char)(0xFF & (j >> 8));
+				headAry[i+2] = (char)(0xFF & (j >> 16));
+				headAry[i+3] = (char)(0xFF & (j >> 24));
+				i += WORD;
+				break;
+			default:
+				memcpy(&headAry[i], &file->head[i], WORD);
+				i += WORD;
+				break;
+		}
+	}
+	return headAry;
+*/
+void setLittleEndian(int index, int size, U_BYTE *head, U_INT value){
+	U_BYTE myWord[4];
+	for (int i = 0; i < WORD; i++){
+		myWord[i] = 0xFF & (value >> i*8);
+	}
+	memcpy(&head[index], &myWord[0], size);
+}
+
+U_BYTE * generateHead(){
+	U_BYTE *headAry = malloc(HEADER_SIZE);
+	if (headAry == NULL){
+	  printf("could not allocate space\n");
+	  return NULL;
+	}
+	memcpy(&headAry[CHUNK_ID], "RIFF", WORD);
+	memcpy(&headAry[FORMAT], "WAVE", WORD);
+	memcpy(&headAry[SUB_CHUNK_1_ID], "fmt ", WORD);
+	memcpy(&headAry[SUB_CHUNK_2_ID], "data", WORD);
+	
+	setLittleEndian(CHUNK_SIZE, WORD, headAry, 38);
+	setLittleEndian(SUB_CHUNK_1_SIZE, WORD, headAry, 18);
+	setLittleEndian(SAMPLE_RATE, WORD, headAry, 44100);
+	setLittleEndian(BYTE_RATE, WORD, headAry, 88200);
+	setLittleEndian(SUB_CHUNK_2_SIZE, WORD, headAry, 0);
+	
+	setLittleEndian(AUDIO_FORMAT, HALFWORD, headAry, 1);
+	setLittleEndian(CHANNEL_COUNT, HALFWORD, headAry, 1);
+	setLittleEndian(BLOCK_ALIGN, HALFWORD, headAry, 2);
+	setLittleEndian(BITS_PER_SAMPLE, HALFWORD, headAry, 16);
+	setLittleEndian(EXTRANEOUS_VAL, HALFWORD, headAry, 0);
+	
+	return headAry;
+	
+}
+void updateHeadData(U_BYTE *head, U_INT dataSize){
+	setLittleEndian(CHUNK_SIZE, WORD, head, (38 + dataSize));
+	setLittleEndian(SUB_CHUNK_2_SIZE, WORD, head, dataSize);
+}
+
+void printHead(HEAD *file){
+	U_INT i = 0;
+	
+	while (i < HEADER_SIZE){
+		switch(i) {
+			case CHUNK_ID      : case FORMAT: 
+			case SUB_CHUNK_1_ID: case SUB_CHUNK_2_ID:
+      			printf("%.4s\n", &file->head[i]);
+      			i += WORD;
+      			break;
+      		case AUDIO_FORMAT   : case CHANNEL_COUNT : case BLOCK_ALIGN: 
+      		case BITS_PER_SAMPLE: case EXTRANEOUS_VAL:
+				printf("%hu\n", makeInt(&file->head[i], HALFWORD));
+				i += HALFWORD;
+				break; 
+			default:
+				printf("%u\n", makeInt(&file->head[i], WORD));
+				i += WORD;
+				break;
+		}
+	}
 }
 
 HEAD * getFile(char *arg){
-	U_BYTE buff[WORD * 13];
+	U_BYTE buff[HEADER_SIZE];
 	U_BYTE temp[WORD];
-	U_BYTE halfTemp[WORD/2];
+	U_BYTE halfTemp[HALFWORD];
 	
 	// Read contents of wave file.
 	FILE *fp = fopen(arg, "rb");	
 	if (fp == NULL)
 		return NULL;
+		
 	int check = fread(&buff, sizeof(U_BYTE), sizeof(buff), fp);
-	fclose(fp);
 	
-	// Assign heap space.
+	// Assign and fill heap space for header.
 	HEAD *file = malloc(sizeof(HEAD));
-	if (file == NULL)
+	if (file == NULL){
+		fclose(fp);
 		return NULL;
-	
-	
-
-	// Tedius work of setting the struct up for processing.
-	pullValue(&buff[0], &temp[0], 0, WORD);     // U_BYTE
-	memcpy(file->chunkID, temp, WORD);
-  
-	pullValue(&buff[0], &temp[0], 4, sizeof(int));     // INT
-	file->chunkSize = makeInt(temp, WORD);
-	
-	pullValue(&buff[0], &temp[0], 8, WORD);     // U_BYTE
-	memcpy(file->format, temp, WORD);
-	pullValue(&buff[0], &temp[0], 12, WORD);    // U_BYTE
-	memcpy(file->subChunk1ID, temp, WORD);
-  
-	pullValue(&buff[0], &temp[0], 16, WORD);     // INT
-	file->subChunk1Size = makeInt(temp, WORD);
-  
-	pullValue(&buff[0], &halfTemp[0], 20, WORD/2);       // 16 bit
-	file->audioFormat = (short)makeInt(halfTemp, WORD/2);
-	pullValue(&buff[0], &halfTemp[0], 22, WORD/2);       // 16 bit
-	file->numChannels = (short)makeInt(halfTemp, WORD/2);
-  
-	pullValue(&buff[0], &temp[0], 24, WORD);     // INT
-	file->sampleRate = makeInt(temp, WORD);
-	pullValue(&buff[0], &temp[0], 28, WORD);     // INT
-	file->byteRate = makeInt(temp, WORD);
-  
-	pullValue(&buff[0], halfTemp, 32, WORD/2);       // 16 bit
-	file->blockAlign = (short)makeInt(halfTemp, WORD/2);
-	pullValue(&buff[0], halfTemp, 34, WORD/2);       // 16 bit
-	file->bitsPerSample = (short)makeInt(halfTemp, WORD/2);
-	pullValue(&buff[0], halfTemp, 36, WORD/2);       // 16 bit
-	file->extraVal = (short)makeInt(halfTemp, WORD/2);
-  
-	pullValue(&buff[0], temp, 38, WORD);    // U_BYTE
-	memcpy(file->subChunk2ID, temp, WORD);
-  
-	pullValue(&buff[0], temp, 42, WORD);     // INT
-	file->subChunk2Size = makeInt(temp, WORD);
-  
+	}
+	file->head = malloc(HEADER_SIZE);
+	if (file->head == NULL){
+		fclose(fp);
+		free(file);
+		return NULL;
+	}
+	memcpy(file->head, buff, HEADER_SIZE);
+      
 	// Point to data.
-	file->data = malloc(file->subChunk2Size);
+	file->data = malloc(makeInt(&file->head[SUB_CHUNK_2_SIZE], WORD));
 	if (file->data == NULL){
+		fclose(fp);
+		free(file->head);
 		free(file);
 		return NULL;
 	}
 	
-	// %%%%%%$$$$ -> [$$$$]
-	memcpy(file->data, &buff[46], file->subChunk2Size);
+	// read the rest of the file
+	fread(file->data, sizeof(U_BYTE), makeInt(&file->head[SUB_CHUNK_2_SIZE], WORD), fp);
 	
+	fclose(fp);
 	return file;
 }
