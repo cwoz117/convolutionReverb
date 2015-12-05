@@ -3,48 +3,51 @@
 #include <string.h>
 #include "structures.h"
 
+static void destroyAll(HEAD *a, HEAD *b, HEAD *c){
+	destroy(a);
+	destroy(b);
+	destroy(c);
+}
 int main(int argCount, char *arg[]){	
 	if (argCount == 4){
+		// Load two files
 		HEAD *dry = getFile(arg[1]);
-		if (dry == NULL)
-			exit(0);	
 		HEAD *iresp = getFile(arg[2]);
-		if (iresp == NULL){
-			destroy(dry);
-			exit(0);
-		}
 		HEAD *output = malloc(sizeof(HEAD));
-		if (output == NULL){
-			destroy(dry);
-			destroy(iresp);
-			exit(0);
+		if (dry == NULL || iresp == NULL || output == NULL){
+			printf("MAIN - Could not load sample files\n");
+			destroyAll(dry, iresp, output);
+			exit(-1);
+		}	
+		printf("MAIN - Created Space for 3 files\n");
+		// Determine data size for output file
+		U_INT dataSize;
+		U_INT impSize;
+		memcpy(&dataSize, &dry->head[DATA_SIZE], WORD);
+		memcpy(&impSize, &iresp->head[DATA_SIZE], WORD);
+		
+		U_INT outSamples = ((dataSize + impSize)/2) - 1;
+		output->head = generateHead(dataSize + impSize - HALFWORD);
+		output->data = calloc(sizeof(float), outSamples);
+		if (output->head == NULL || output->data == NULL){
+			printf("MAIN - Could not generate output file\n");
+			destroyAll(dry, iresp, output);
+			exit(-1);
 		}
-
-		printf("Starting\n");
-
+	printHead(output);
 		// Convolve
-		U_INT outSize = makeInt(&dry->head[SUB_CHUNK_2_SIZE], WORD) + 
-						makeInt(&iresp->head[SUB_CHUNK_2_SIZE], WORD) - 1;
-		output->head = generateHead();
-		if (output->head == NULL){
-			destroy(dry);
-			destroy(iresp);
-			destroy(output);
-			exit(0);
-		}
-		output->data = convolve(dry, iresp, outSize);
-		//output->data = malloc(outSize);
-		if (output->data == NULL){
-			destroy(dry);
-			destroy(iresp);
-			destroy(output);
-			exit(0);
-		}
-		updateHeadData(output->head, outSize);
-		writeToFile(output, arg[3], makeInt(&output->head[SUB_CHUNK_2_SIZE], WORD));
-		destroy(output);
-		destroy(dry);
-		destroy(iresp);
+		printf("MAIN - setup output file, starting convolve...\n");	
+		convolve(dry, iresp, output);
+		printf("MAIN - finished convolution\n");
+		
+		// Save file
+		writeToFile(output, arg[3]);
+		printf("MAIN - Wrote to file\n");
+		
+		// Clean up
+		destroyAll(dry, iresp, output);
+		printf("MAIN - Cleaned up data\n");
+		
 	} else {
 		printf("invalid number of arguments\n");
 		exit(0);

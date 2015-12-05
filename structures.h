@@ -21,8 +21,7 @@
 #define BITS_PER_SAMPLE		34	// 16 		short
 #define EXTRANEOUS_VAL		36	// 0 		short *NOTE
 #define SUB_CHUNK_2_ID		38	// data
-#define	SUB_CHUNK_2_SIZE	42	// 0
-
+#define	DATA_SIZE			42	// 0
 
 typedef unsigned char 	U_BYTE;
 typedef unsigned short	U_SHORT;
@@ -30,18 +29,16 @@ typedef unsigned int	U_INT;
 
 typedef struct HEADER{
 	U_BYTE	*head;
-	U_BYTE	*data;
+	float	*data;
 } HEAD;
 
-HEAD * getFile(char *filename);
-U_INT makeInt(U_BYTE *littleEndian, int size);
-void destroy(HEAD *file);
-void printHead(HEAD *file);
-void writeToFile(HEAD *mem, char *filename, int size);
-void setLittleEndian(int index, int size, U_BYTE *head, U_INT value);
-void updateHeadData(U_BYTE *head, U_INT dataSize);
-U_BYTE * convolve(HEAD *dry, HEAD *impulse, U_INT outputSize);
-U_BYTE * generateHead();
+U_BYTE 	* generateHead(U_INT dataSize);
+HEAD 	* getFile(char *filename);
+void	convolve(HEAD *dry, HEAD *impulse, HEAD *output);
+void 	destroy(HEAD *file);
+void 	printHead(HEAD *file);
+void 	writeToFile(HEAD *mem, char *filename);
+
 
 
 #endif
