@@ -4,6 +4,10 @@
 #include <string.h>
 #include "structures.h"
 
+#define PI         3.141592653589793
+#define TWO_PI     (2.0 * PI)
+#define SWAP(a,b)  tempr=(a);(a)=(b);(b)=tempr
+
 void inputSide(HEAD *dry, HEAD *impulse, HEAD *output){
 	U_INT iMax;
 	U_INT jMax;
