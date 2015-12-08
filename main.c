@@ -42,7 +42,7 @@ int main(int argCount, char *arg[]){
 		// Convolve
 		printf("MAIN - setup output file, starting convolve...\n");
 		start = clock();
-		outputSide(dry, iresp, output);
+		inputSide(dry, iresp, output);
 		end = clock();
 		printf("MAIN - finished convolution in %ld\n", (end - start)/CLOCKS_PER_SEC);
 		
