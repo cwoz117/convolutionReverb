@@ -6,7 +6,7 @@
 #include "structures.h"
 
 // 32768.0
-const float hearingAid = 32768.0f;
+const float hearingAid = 327680.0f*4.0f;
 
 void destroy(HEAD *file){
 	if (file != NULL){
@@ -126,7 +126,7 @@ HEAD * getFile(char *arg){
 	
 	// Create space for data.
 	memcpy(&dataSize, &file->head[DATA_SIZE], WORD);
-	printf("Get_FILE - File Size: %u\n", dataSize);
+	printf("GET_FILE - File Size: %u\n", dataSize);
 	file->data = malloc((dataSize/2) * sizeof(float));
 	if (file->data == NULL){
 		free(file->head);

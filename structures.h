@@ -34,7 +34,8 @@ typedef struct HEADER{
 
 U_BYTE 	* generateHead(U_INT dataSize);
 HEAD 	* getFile(char *filename);
-void	convolve(HEAD *dry, HEAD *impulse, HEAD *output);
+void	inputSide(HEAD *dry, HEAD *impulse, HEAD *output);
+void	outputSide(HEAD *dry, HEAD *impulse, HEAD *output);
 void 	destroy(HEAD *file);
 void 	printHead(HEAD *file);
 void 	writeToFile(HEAD *mem, char *filename);

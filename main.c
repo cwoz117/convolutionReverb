@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "structures.h"
 
 static void destroyAll(HEAD *a, HEAD *b, HEAD *c){
@@ -10,6 +11,9 @@ static void destroyAll(HEAD *a, HEAD *b, HEAD *c){
 }
 int main(int argCount, char *arg[]){	
 	if (argCount == 4){
+	
+		clock_t start, end;
+		
 		// Load two files
 		HEAD *dry = getFile(arg[1]);
 		HEAD *iresp = getFile(arg[2]);
@@ -34,11 +38,13 @@ int main(int argCount, char *arg[]){
 			destroyAll(dry, iresp, output);
 			exit(-1);
 		}
-	printHead(output);
+		
 		// Convolve
-		printf("MAIN - setup output file, starting convolve...\n");	
-		convolve(dry, iresp, output);
-		printf("MAIN - finished convolution\n");
+		printf("MAIN - setup output file, starting convolve...\n");
+		start = clock();
+		outputSide(dry, iresp, output);
+		end = clock();
+		printf("MAIN - finished convolution in %ld\n", (end - start)/CLOCKS_PER_SEC);
 		
 		// Save file
 		writeToFile(output, arg[3]);
